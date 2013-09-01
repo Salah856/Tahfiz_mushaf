@@ -30,4 +30,4 @@ usage
 
 download
 ========
-[releases](https://github.com/myaser/Tahfiz_mushaf/releases)
+- [output_hefz_v1.0.pdf](https://dl.dropboxusercontent.com/s/a2q12qmz3k8nxht/output_hefz_v1.0.pdf?token_hash=AAH3p8UCwmO1hsguPI080eCPteoDQkuTbAySg9EmGuaWeQ&dl=1 "v1.0 pdf file")
