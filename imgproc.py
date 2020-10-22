@@ -1,16 +1,18 @@
 import os
+from dataclasses import dataclass
+
 from PIL import Image
 from cv2 import (imread, TM_CCORR_NORMED, matchTemplate, rectangle, normalize,
                  NORM_MINMAX, minMaxLoc)
 
 from formats import pil2numpy, numpy2pil
-import numpy
+import numpy as np
+from datatypes import PipelineItem
 
-DATA_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+DATA_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "assets"))
 SOURA_BEGINNING = imread(os.path.join(DATA_DIRECTORY, "SOURA_BEGINNING.jpg"))
 AYAT_SEPARATOR = imread(os.path.join(DATA_DIRECTORY, "AYAT_SEPARATOR.png"))
 LAYOUT = imread(os.path.join(DATA_DIRECTORY, "LAYOUT.jpg"))
-
 
 def search_image(num_image, num_template, threshold=0.99):
     '''
@@ -18,7 +20,7 @@ def search_image(num_image, num_template, threshold=0.99):
     object within the image
     '''
     result = matchTemplate(num_image, num_template, TM_CCORR_NORMED)
-    loc = numpy.where(result >= threshold)
+    loc = np.where(result >= threshold)
 
     return loc
 
@@ -37,25 +39,25 @@ def fillin_template(background, image, positions):
     return background
 
 
-def layout_handler((image, index, layout, page)):
-    num_img = pil2numpy(image)
+def layout_handler(pipeline_item: PipelineItem):
+    num_img = pil2numpy(pipeline_item.orig_image)
 
     layout_location = matchTemplate(num_img, LAYOUT, TM_CCORR_NORMED)
     min_x, max_y, minloc, maxloc = minMaxLoc(layout_location)
 
-    layout.paste(numpy2pil(LAYOUT), maxloc)
-    return image, index, layout, page
+    pipeline_item.modified_image.paste(numpy2pil(LAYOUT), maxloc)
+    return pipeline_item
 
 
-def ayat_handler((image, index, layout, page)):
-    num_img = pil2numpy(image)
+def ayat_handler(pipeline_item: PipelineItem):
+    num_img = pil2numpy(pipeline_item.orig_image)
     ayat_location = search_image(num_img, AYAT_SEPARATOR, threshold=0.959)
-    layout = fillin_template(layout, numpy2pil(AYAT_SEPARATOR), ayat_location)
-    return image, index, layout, page
+    pipeline_item.modified_image = fillin_template(pipeline_item.modified_image, numpy2pil(AYAT_SEPARATOR), ayat_location)
+    return pipeline_item
 
 
-def soura_handler((image, index, layout, page)):
-    num_img = pil2numpy(image)
+def soura_handler(pipeline_item: PipelineItem):
+    num_img = pil2numpy(pipeline_item.orig_image)
     soura_location = search_image(num_img, SOURA_BEGINNING, threshold=0.935)
-    layout = fillin_template(layout, numpy2pil(SOURA_BEGINNING), soura_location)
-    return image, index, layout, page
+    pipeline_item.modified_image = fillin_template(pipeline_item.modified_image, numpy2pil(SOURA_BEGINNING), soura_location)
+    return pipeline_item

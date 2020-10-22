@@ -48,3 +48,6 @@ nosetests.xml
 *.db-journal
 
 *.xcf
+
+#vscode
+.vscode/
